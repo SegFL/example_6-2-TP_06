@@ -131,7 +131,7 @@ static void userInterfaceMatrixKeypadUpdate()
 
 static void userInterfaceDisplayInit()
 {
-    displayInit( DISPLAY_CONNECTION_GPIO_4BITS );
+    displayInit( DISPLAY_CONNECTION_GPIO_8BITS);
      
     displayCharPositionWrite ( 0,0 );
     displayStringWrite( "Temperature:" );

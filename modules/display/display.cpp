@@ -3,6 +3,7 @@
 #include "mbed.h"
 #include "arm_book_lib.h"
 #include "display.h"
+#include <cstdio>
 
 //=====[Declaration of private defines]========================================
 
@@ -58,6 +59,14 @@
 
 //=====[Declaration and initialization of public global objects]===============
 
+/*I2C.h
+lock(): Limita el acceso a ese bus
+*/
+
+
+
+//Pines de salida para display de 8 bits
+//Para 4 bits usa de D4-D7 y los pines Rs y En o sea D8 D9
 DigitalOut displayD0( D0 );
 DigitalOut displayD1( D1 );
 DigitalOut displayD2( D2 );
@@ -86,6 +95,11 @@ static void displayCodeWrite( bool type, uint8_t dataBus );
 
 //=====[Implementations of public functions]===================================
 
+
+//Se encarga de realizar la secuencia necesaria para inicializar del tipo de display utilizado
+//En el switch utilizado solo se escribe la siguiente linea para validar la verificacion para el tipo de 
+//de conexion enviada como parametro
+//"            initial8BitCommunicationIsCompleted = true;              "
 void displayInit( displayConnection_t connection )
 {
     display.connection = connection;
@@ -165,6 +179,7 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
 {    
     switch( charPositionY ) {
         case 0:
+         printf("(%c,%c)\n", charPositionX,charPositionY);
             displayCodeWrite( DISPLAY_RS_INSTRUCTION, 
                               DISPLAY_IR_SET_DDRAM_ADDR |
                               ( DISPLAY_20x4_LINE1_FIRST_CHARACTER_ADDRESS +
@@ -173,6 +188,7 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
         break;
        
         case 1:
+         printf("(%c,%c)\n", charPositionX,charPositionY);
             displayCodeWrite( DISPLAY_RS_INSTRUCTION, 
                               DISPLAY_IR_SET_DDRAM_ADDR |
                               ( DISPLAY_20x4_LINE2_FIRST_CHARACTER_ADDRESS +
@@ -181,6 +197,7 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
         break;
        
         case 2:
+         printf("(%c,%c)\n", charPositionX,charPositionY);
             displayCodeWrite( DISPLAY_RS_INSTRUCTION, 
                               DISPLAY_IR_SET_DDRAM_ADDR |
                               ( DISPLAY_20x4_LINE3_FIRST_CHARACTER_ADDRESS +
@@ -189,6 +206,7 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
         break;
 
         case 3:
+         printf("(%c,%c)\n", charPositionX,charPositionY);
             displayCodeWrite( DISPLAY_RS_INSTRUCTION, 
                               DISPLAY_IR_SET_DDRAM_ADDR |
                               ( DISPLAY_20x4_LINE4_FIRST_CHARACTER_ADDRESS +
@@ -201,9 +219,14 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
 
 void displayStringWrite( const char * str )
 {
+
+    printf("%s\n", str);
     while (*str) {
         displayCodeWrite(DISPLAY_RS_DATA, *str++);
     }
+    
+
+
 }
 
 //=====[Implementations of private functions]==================================
@@ -212,10 +235,10 @@ static void displayCodeWrite( bool type, uint8_t dataBus )
 {
     if ( type == DISPLAY_RS_INSTRUCTION )
         displayPinWrite( DISPLAY_PIN_RS, DISPLAY_RS_INSTRUCTION);
-        else
+    else
         displayPinWrite( DISPLAY_PIN_RS, DISPLAY_RS_DATA);
     displayPinWrite( DISPLAY_PIN_RW, DISPLAY_RW_WRITE );
-    displayDataBusWrite( dataBus );
+    displayDataBusWrite(dataBus);
 }
 
 static void displayPinWrite( uint8_t pinName, int value )
@@ -251,7 +274,9 @@ static void displayPinWrite( uint8_t pinName, int value )
             break;
     }
 }
-
+//Realiza la secuencia correspondiente para enviar los datos al display generando los flancos ascenedentes y descendientes
+// solo si se esta trabajando con 4 bits 
+//" if ( initial8BitCommunicationIsCompleted == true) "
 static void displayDataBusWrite( uint8_t dataBus )
 {
     displayPinWrite( DISPLAY_PIN_EN, OFF );
